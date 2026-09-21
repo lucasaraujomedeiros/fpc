@@ -1,0 +1,9 @@
+Análise da execução serial
+
+Não houve alteração na ordem da execução de tarefas. Sempre foi primeiro a verificação dos logs e depois, a verificação dos recursos. 
+Além disso, a verificação dos recursos também foi serial, começando do recurso 1 e terminando no recurso 5.
+
+Tempo de execução: verificação dos logs (4000 ms) + 5* verificação de cada recurso(1000,3000)
+
+tempo min: 4000 + 5 * 1000 = 9000 ms
+tempo max: 4000 + 5 * 3000 = 190000 ms
