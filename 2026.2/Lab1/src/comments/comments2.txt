@@ -1,0 +1,43 @@
+Q1) Sim, pelos logs conseguimos perceber  a presença de 3 threads: 
+main, cujo objetivo é invocar as outras threads
+thread0, que é a thread responsável pela configuração dos logs
+thread1, que é a thread responsável pela verificação dos recursos
+
+Q2) Sim. ficou mais fácil depurar o programa, pois agora é mais simples de associar o output de cada thread à tarefa a qual ela foi
+designada (pelo nome). Isso pode ser notado no output:
+
+[main] --- INÍCIO DO PROGRAMA JAVA ---
+[setup logs] INÍCIO: Configuração de Logs...
+[main] Inicialização de tarefas concorrentes solicitada.
+[check recursos] INÍCIO: Verificação de Recursos.
+[main] --- FIM DO PROGRAMA JAVA (Main terminou) ---
+[check recursos] Verificando Recurso 1 (Duração: 1082ms)...
+[check recursos] Verificando Recurso 2 (Duração: 2413ms)...
+[check recursos] Verificando Recurso 3 (Duração: 2914ms)...
+[setup logs] FIM: Configuração de Logs concluída.
+[check recursos] Verificando Recurso 4 (Duração: 1724ms)...
+[check recursos] Verificando Recurso 5 (Duração: 1901ms)...
+[check recursos] FIM: Verificação concluída.
+
+Q3) O comportamento dela, nesssa ordem, é: printar a mensagem de início do programa, criar a task de verificação dos recursos, 
+criar a thread para verificação dos logs, criar a thread para verificação dos recursos, iniciá-las, printar uma mensagem para confirmar que
+a inicialização das threads deu certo e encerrar sua execução.
+
+A thread é inicializada juntamente com a criação do processo (a partir do comando de rodar o programa java) e é finalizada após a inicialização das 
+outras threads.
+
+Q4) Sim, foi alterado. Agora, a thread main esperou as outras duas finalizarem suas execuções para, finalmente, encerrar.
+
+[main] --- INÍCIO DO PROGRAMA JAVA ---
+[main] Inicialização de tarefas concorrentes solicitada.
+[check recursos] INÍCIO: Verificação de Recursos.
+[setup logs] INÍCIO: Configuração de Logs...
+[check recursos] Verificando Recurso 1 (Duração: 2765ms)...
+[check recursos] Verificando Recurso 2 (Duração: 1060ms)...
+[check recursos] Verificando Recurso 3 (Duração: 1773ms)...
+[setup logs] FIM: Configuração de Logs concluída.
+[check recursos] Verificando Recurso 4 (Duração: 2697ms)...
+[check recursos] Verificando Recurso 5 (Duração: 2367ms)...
+[check recursos] FIM: Verificação concluída.
+[main] --- FIM DO PROGRAMA JAVA (Main terminou) ---
+

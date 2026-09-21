@@ -60,14 +60,23 @@ public class SimpleConcurrentSolution {
         ResourceCheckTask checkInstance = new ResourceCheckTask(); 
 
         // Criação e Início das Threads
-        Thread tLogs = new Thread(logSetupTask); //, "Setup-Logs");
-        Thread tCheck = new Thread(checkInstance); //, "Check-Recursos");
+        Thread tLogs = new Thread(logSetupTask, "setup logs"); //, "Setup-Logs");
+        Thread tCheck = new Thread(checkInstance, "check recursos"); //, "Check-Recursos");
 
         // Início da execução concorrente
         tLogs.start();
         tCheck.start();
 
         System.out.println("[" + currentThread.getName() + "] Inicialização de tarefas concorrentes solicitada.");
+
+        try {
+            tLogs.join();
+            tCheck.join();
+        } catch (InterruptedException e) {
+            System.err.println("[" + currentThread.getName() + "] interrompida");
+            Thread.currentThread().interrupt();
+            return;
+        }
 
         System.out.println("[" + currentThread.getName() + "] --- FIM DO PROGRAMA JAVA (Main terminou) ---");
     }
