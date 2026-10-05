@@ -69,7 +69,7 @@ int get_students_in_class(Classes *c, int class_id, Student *output[]) {
 }
 
 /* Process grades for one class */
-void process_grades(Classes *c, int class_id) {
+double process_grades(Classes *c, int class_id) {
     const char *professor = c->professors[(class_id - 1) % 2];
     printf("\n%s's class (%d) — starting grading...\n", professor, class_id);
     fflush(stdout);
@@ -78,6 +78,7 @@ void process_grades(Classes *c, int class_id) {
     Student *students[MAX_STUDENTS];
     int count = get_students_in_class(c, class_id, students);
 
+    double biggest_grade = 0;
     for (int i = 0; i < count; i++) {
         Student *s = students[i];
         fflush(stdout);
@@ -87,12 +88,18 @@ void process_grades(Classes *c, int class_id) {
         s->final_grade = grade;
         s->has_grade = 1;
 
+        if (grade > biggest_grade) {
+            biggest_grade = grade;
+        }
+
         printf("%s corrected Student %s from class %d - Grade: %.2f\n", professor, s->student_id, class_id, grade);
         fflush(stdout);
         random_sleep(0.1, 0.3);
     }
 
     printf("%s's class %d grades successfully processed!\n\n", professor, class_id);
+
+    return biggest_grade;
 }
 
 /* Print registry per class */
@@ -128,11 +135,13 @@ void init_classes(Classes *c, int num_classes, int num_students_per_class) {
 typedef struct {
     Classes *classes_ptr;
     int class_id;
+    double biggest_grade;
 } ThreadArgs;
 
 void* process_grades_thread(void* arg){
     ThreadArgs* args = (ThreadArgs*)arg;
-    process_grades(args->classes_ptr, args->class_id);
+    double biggest_grade = process_grades(args->classes_ptr, args->class_id);
+    args->biggest_grade = biggest_grade;
     return NULL;
 }
 
@@ -167,12 +176,20 @@ int main(int argc, char *argv[]) {
         args[i].class_id = semester.class_ids[i];
         pthread_create(&threads[i], NULL, process_grades_thread, &args[i]);
     }
-
+    for (int i = 0; i < semester.num_classes; i++) {
+        pthread_join(threads[i], NULL);
+    }
     for (int i = 0; i < semester.num_classes; i++) {
         registry_to_string(&semester, semester.class_ids[i]);
     }
 
-    printf("======================= The End =======================\n");
+    printf("Biggest grades from each class:");
+
+    for (int i = 0; i < semester.num_classes; i++) {
+        printf("\nThe biggest grade from class %d is %f", semester.class_ids[i], args[i].biggest_grade);
+    }
+
+    printf("\n======================= The End =======================\n");
 
     return 0;
 }

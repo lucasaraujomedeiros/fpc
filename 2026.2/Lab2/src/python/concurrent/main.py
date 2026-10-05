@@ -4,6 +4,7 @@ import sys
 import threading
 from typing import Dict, List, Optional, Any
 
+dict_biggest_grades = {}
 
 class Classes:
     
@@ -51,15 +52,20 @@ class Classes:
 
         their_alumni = self.get_students_in_class(class_id)
 
+        biggest_grade = 0
         for student_id in their_alumni:
             time.sleep(random.uniform(0.2, 0.5))
 
-            grade = self._generate_student_grade()
+            grade = float(self._generate_student_grade())
             self.semester_registry[student_id]["final_grade"] = grade
+
+            if grade > biggest_grade:
+                biggest_grade = grade
 
             print(f"{professor} corrected Student {student_id} from class {class_id} - Grade: {grade}")
             time.sleep(random.uniform(0.1, 0.3))
 
+        dict_biggest_grades[class_id] = biggest_grade
         print(f"{professor}'s class {class_id} grades successfully processed!\n")
 
     def registry_to_string(self, class_id: int) -> None:
@@ -95,9 +101,17 @@ if __name__ == "__main__":
         threads.append(t)
     
     for t in threads:
+        t.start()
+
+    for t in threads:
         t.join()
 
     for class_id in semester.class_ids:
         semester.registry_to_string(class_id)
+
+    print("\nMaiores notas de cada turma")
+    for class_id in semester.class_ids:
+        print("A maior nota da turma " + str(class_id) + " foi: " + str(dict_biggest_grades[class_id]))
+
 
     print("======================= The End =======================")
