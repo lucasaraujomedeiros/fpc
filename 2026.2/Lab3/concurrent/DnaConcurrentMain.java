@@ -1,9 +1,12 @@
 import java.io.File;
 import java.io.IOException;
+import java.util.ArrayList;
 import java.io.BufferedReader;
 import java.io.FileReader;
 
 public class DnaConcurrentMain {
+    public static ArrayList<Thread> threads = new ArrayList<Thread>();
+    public static ArrayList<Work> works = new ArrayList<Work>();
 
     public static void main(String[] args) {
         if (args.length < 2) {
@@ -27,18 +30,31 @@ public class DnaConcurrentMain {
             System.exit(3);
         }
 
-        try {
-            long total = 0;
+    
+        long total = 0;
             
 	    for (File f : files) {
-                total += countInFile(f, pattern);
+                Work work = new Work(f, pattern);
+                works.add(work);
+                Thread t = new Thread(work);
+                threads.add(t);
+                t.start();
             }
 
-	    System.out.println("Sequência " + pattern + " foi encontrada " + total + " vezes.");
-        } catch (IOException e) {
-            System.err.println("Erro ao ler arquivos: " + e.getMessage());
-            System.exit(4);
+        for (Thread t : threads) {
+            try {
+                t.join();
+            } catch (InterruptedException e) {
+                Thread.currentThread().interrupt();
+            }
         }
+
+        for (Work work : works) {
+            total += work.count;
+        }
+
+	    System.out.println("Sequência " + pattern + " foi encontrada " + total + " vezes.");
+        
     }
 
 
@@ -82,4 +98,28 @@ public class DnaConcurrentMain {
         return count;
     }
 
+    static class Work implements Runnable{ 
+    
+        long count = 0;
+        public File file;
+        public String pattern;
+
+        public Work(File file, String pattern) {
+            this.file = file;
+            this.pattern = pattern;
+        }
+
+        @Override
+        public void run() {
+            try {
+                count = countInFile(file, pattern);
+            } catch (IOException e) {
+            System.err.println("Erro ao ler arquivos: " + e.getMessage());
+            System.exit(4);
+            }
+        }
+    }
+
 }
+
+// lab3@pc
