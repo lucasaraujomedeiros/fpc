@@ -29,7 +29,7 @@ public class ImageMeanFilter {
      * @param kernelSize Size of mean kernel
      * @throws IOException If there is an error reading/writing
      */
-    public static void applyMeanFilter(String inputPath, String outputPath, int kernelSize) throws IOException {
+    public static void applyMeanFilter(String inputPath, String outputPath, int kernelSize, int totalThreads) throws IOException {
         // Load image
         BufferedImage originalImage = ImageIO.read(new File(inputPath));
         
@@ -44,8 +44,30 @@ public class ImageMeanFilter {
         int width = originalImage.getWidth();
         int height = originalImage.getHeight();
         // Process each pixel
-        for (int y = 0; y < height; y++) {
-            for (int x = 0; x < width; x++) {
+
+        Thread[] threads = new Thread[totalThreads];
+        
+        for (int i = 0; i < totalThreads; i++) {
+            Work work = new Work(i, totalThreads, height, width, originalImage, kernelSize, filteredImage);
+            Thread thread = new Thread(work);
+            threads[i] = thread;
+            thread.start();
+        }
+
+        for (Thread thread : threads) {
+            try {
+                thread.join();
+            } catch (Exception e) {
+                System.out.println("erro");
+            }
+        }
+
+        // Save filtered image
+        ImageIO.write(filteredImage, "jpg", new File(outputPath));
+    }
+
+    public static void process_line(int y, int width, BufferedImage originalImage, int kernelSize, BufferedImage filteredImage) {
+        for (int x = 0; x < width; x++) {
                 // Calculate neighborhood average
                 int[] avgColor = calculateNeighborhoodAverage(originalImage, x, y, kernelSize);
                 
@@ -56,10 +78,6 @@ public class ImageMeanFilter {
                     avgColor[2]
                 );
             }
-        }
-        
-        // Save filtered image
-        ImageIO.write(filteredImage, "jpg", new File(outputPath));
     }
     
     /**
@@ -135,10 +153,41 @@ public class ImageMeanFilter {
         }
 
         String inputFile = args[0];
+        int totalThreads = Integer.parseInt(args[1]);
         try {
-            applyMeanFilter(inputFile, "filtered_output.jpg", 7);
+            applyMeanFilter(inputFile, "filtered_output.jpg", 7, totalThreads);
         } catch (IOException e) {
             System.err.println("Error processing image: " + e.getMessage());
+        }
+    }
+}
+
+class Work implements Runnable {
+    
+    int threadNumber;
+    int totalThreads;
+    int height;
+    int width;
+    BufferedImage originalImage;
+    int kernelSize;
+    BufferedImage filteredImage;
+
+    public Work(int threadNumber, int totalThreads, int height, int width, BufferedImage originalImage, int kernelSize, BufferedImage filteredImage) {
+        this.threadNumber = threadNumber;
+        this.totalThreads = totalThreads;
+        this.height = height;
+        this.width = width;
+        this.originalImage = originalImage;
+        this.kernelSize = kernelSize;
+        this.filteredImage = filteredImage;
+    }
+
+    @Override
+    public void run() {
+        for (int y = 0; y < height; y++) {
+            if (y % totalThreads == threadNumber) {
+                ImageMeanFilter.process_line(y, width, originalImage, kernelSize, filteredImage);
+            }
         }
     }
 }
