@@ -148,12 +148,18 @@ public class ImageMeanFilter {
      */
     public static void main(String[] args) {
         if (args.length < 1) {
-            System.err.println("Usage: java ImageMeanFilter <input_file>");
+            System.err.println("Usage: java ImageMeanFilter <input_file> <n_threads>");
             System.exit(1);
         }
 
         String inputFile = args[0];
         int totalThreads = Integer.parseInt(args[1]);
+
+        if (totalThreads < 2) {
+            System.err.println("n_threads must be at least 2");
+            System.exit(1);
+        }
+
         try {
             applyMeanFilter(inputFile, "filtered_output.jpg", 7, totalThreads);
         } catch (IOException e) {
