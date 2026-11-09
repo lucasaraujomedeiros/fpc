@@ -44,40 +44,52 @@ public class ImageMeanFilter {
         int width = originalImage.getWidth();
         int height = originalImage.getHeight();
         // Process each pixel
+        Work[] works = new Work[totalThreads];
+        Thread[] threads = new Thread[totalThreads];   
+        int totalDifferentPixels = 0;   
 
-        Thread[] threads = new Thread[totalThreads];
-        
         for (int i = 0; i < totalThreads; i++) {
             Work work = new Work(i, totalThreads, height, width, originalImage, kernelSize, filteredImage);
             Thread thread = new Thread(work);
             threads[i] = thread;
+            works[i] = work;
             thread.start();
         }
 
-        for (Thread thread : threads) {
+        for (int i = 0; i < totalThreads; i++) {
             try {
-                thread.join();
+                threads[i].join();
             } catch (Exception e) {
                 System.out.println("erro");
             }
+            totalDifferentPixels += works[i].differentPixels;
         }
+
+        System.out.println("Quantity of different pixels: " + totalDifferentPixels);
+        System.out.println("Quantity of not changed pixels: " + (width*height - totalDifferentPixels));
 
         // Save filtered image
         ImageIO.write(filteredImage, "jpg", new File(outputPath));
     }
 
-    public static void process_line(int y, int width, BufferedImage originalImage, int kernelSize, BufferedImage filteredImage) {
+    public static int process_line(int y, int width, BufferedImage originalImage, int kernelSize, BufferedImage filteredImage) {
+        int differentPixels = 0;
         for (int x = 0; x < width; x++) {
                 // Calculate neighborhood average
                 int[] avgColor = calculateNeighborhoodAverage(originalImage, x, y, kernelSize);
-                
+                int beforePixel = filteredImage.getRGB(x, y);
                 // Set filtered pixel
                 filteredImage.setRGB(x, y, 
                     (avgColor[0] << 16) | 
                     (avgColor[1] << 8)  | 
                     avgColor[2]
                 );
+                int afterPixel = filteredImage.getRGB(x, y);
+                if (afterPixel != beforePixel) {
+                    differentPixels++;
+                } 
             }
+            return differentPixels;
     }
     
     /**
@@ -177,6 +189,7 @@ class Work implements Runnable {
     BufferedImage originalImage;
     int kernelSize;
     BufferedImage filteredImage;
+    int differentPixels = 0;
 
     public Work(int threadNumber, int totalThreads, int height, int width, BufferedImage originalImage, int kernelSize, BufferedImage filteredImage) {
         this.threadNumber = threadNumber;
@@ -192,7 +205,8 @@ class Work implements Runnable {
     public void run() {
         for (int y = 0; y < height; y++) {
             if (y % totalThreads == threadNumber) {
-                ImageMeanFilter.process_line(y, width, originalImage, kernelSize, filteredImage);
+                int diff = ImageMeanFilter.process_line(y, width, originalImage, kernelSize, filteredImage);
+                this.differentPixels += diff;
             }
         }
     }

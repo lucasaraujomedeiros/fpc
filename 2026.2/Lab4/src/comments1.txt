@@ -1,0 +1,38 @@
+Eu rodei o algoritmo para tratar a imagem jotinha_noise.jpg . Executei o algoritmo duas vezes para cada nº de threads e calculei a média
+entre as duas execuções, buscando deixar a análise menos suceptível à aleatoriedade. Podemos perceber que há um ganho notável ao aumentar
+o número de threads partindo de 1 thread (solução serial) - 24,762s de média - até 4 threads - 8,919s de média. Isso pode ser explicado e previsto
+sabendo que o computador com o qual executei os testes tem 4 núcleos de processamento (verificado a partir do comando nproc, no terminal), ou seja,
+há ganho de tempo real pois mais núcleos estão sendo usados para a aplicação do filtro de maneira independente.
+A partir de 4 threads, o tempo de execução não apresenta uma melhora visível e varia em torno de 9 segundos ao longo das execuções.
+
+1 thread (solução serial): 24.501s + 25,023s | média: 24,762s
+2 threads: 15.076s + 14.640s | média: 14,858s
+3 threads: 10.488s + 10.537s | média: 10,512s
+4 threads: 9.552s + 8.287s | média: 8,919s
+5 threads: 9.474s + 8.997s | média: 9,235s
+6 threads: 9.130s + 8.974s | média: 9,052s
+7 threads: 8.989s + 9.000s | média: 8,994s
+8 threads: 9.529s + 9.369s | média: 9,449s
+
+10000 threads: 9.904s + 10.314s | média: 10,109s 
+
+100000 threads: 20,413 + 21,630s | média: 21,021s
+
+1000000 threads: 135,380 + 140,725s | média: 138,052s
+
+Entre 8 e 10000 (dez mil) threads, a variação é mínima: apenas 1 segundo a mais de média. 
+Já entre 10000 (dez mil) e 100000 (cem mil) threads, a variação é um pouco maior que o dobro, portanto é bem significativa.
+Para 1 milhão, o algoritmo fica bem mais lento que a solução serial: 138,052 segundos.
+
+Isso significa que a partir de um número muito alto de threads, o overhead de criação de threads e a disputa entre elas pela CPU
+é significativo e torna a solução concorrente lenta, podendo chegar, em casos extremos (como visto em 1 milhão de threads) a
+ser mais lenta que a solução serial.
+
+
+2. Sobre o cálculo de pixels diferentes. 
+
+Eu modifiquei o código para retornar a quantidade de pixels que foram modificadas, e ele me retornava sempre o total de pixels. 
+Suspeitando, eu criei um arquivo que era uma foto totalmente preta, onde todos os pixels teriam o mesmo valor, e o resultado foi que,
+nesse caso, houve 0 pixels modificados, como o esperado. Então, acredito que de fato o algoritmo está contando os pixels modificados corretamente,
+e é simplesmente muito improvável que a média dos valores dos 9 pixels seja exatamente igual ao valor do pixel central, considerando que o valor de
+um pixel varia de 0 a 255 em 3 canais (RGB). 
